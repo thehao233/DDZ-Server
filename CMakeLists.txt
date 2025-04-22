@@ -15,7 +15,7 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/database
         # 包含openssl头文件
         "/usr/local/ssl/include/"
-        # 包含protobuf头文件
+        # 包含protobuf jsoncpp头文件
         "/usr/local/include/"
         # 包含mysql头文件
         "/usr/include/mysql/"
@@ -36,7 +36,10 @@ add_subdirectory(game)
 add_subdirectory(database)
 
 # 添加链接的库文件目录
-link_directories("/usr/lib64/mysql/")
+link_directories(
+        "/usr/lib64/mysql/"
+        "/usr/local/lib64/"
+)
 
 # 测试目录
 add_subdirectory(test)

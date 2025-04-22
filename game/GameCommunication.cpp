@@ -8,6 +8,7 @@
 #include "Hash.h"
 #include "Log.h"
 #include "RsaCrypto.h"
+#include "ParseDBJson.h"
 
 
 std::shared_ptr<Message> GameCommunication::parseRequestData(Buffer* readBuffer) {
@@ -219,8 +220,14 @@ void GameCommunication::handleUserRegister(std::shared_ptr<Message> requestMsg, 
 }
 
 GameCommunication::GameCommunication() {
+    // 加载mysql服务器配置
+    Debug("加载mysql服务器配置.....");
+    ParseDBJson parse;
+    shared_ptr<DBInfo> info = parse.getDataBaseInfo(ParseDBJson::DBType::Mysql);
+
     // 连接mysql服务器
     m_mysqlConn = new MySqlConn;
-    bool flag = m_mysqlConn->connect("root", "123456", "ddz", "localhost");
+    bool flag = m_mysqlConn->connect(info->user, info->password, info->dbname, info->ip, info->port);
+//    bool flag = m_mysqlConn->connect("root", "123456", "ddz", "localhost");
     assert(flag);
 }
