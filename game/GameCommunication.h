@@ -10,6 +10,7 @@
 #include "AesCrypto.h"
 #include <functional>
 #include "MySqlConn.h"
+#include "RedisConn.h"
 
 class GameCommunication {
 public:
@@ -45,6 +46,9 @@ private:
 
     // mysql连接
     MySqlConn *m_mysqlConn = nullptr;
+
+    // redis连接
+    RedisConn *m_redisConn = nullptr;
 
 };
 

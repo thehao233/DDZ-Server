@@ -13,6 +13,10 @@ public:
     static int acceptConnection(void* arg);
 
 private:
+    // 生成Rsa密钥对，并将其存入到Redis服务器中
+    void saveRsaKey();
+
+private:
     int m_threadNum;
     EventLoop* m_mainLoop;
     ThreadPool* m_threadPool;
