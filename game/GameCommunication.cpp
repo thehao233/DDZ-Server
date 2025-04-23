@@ -78,7 +78,12 @@ void GameCommunication::handleAesFenfa(std::shared_ptr<Message> requestMsg, Mess
     string hashedAesKey = requestMsg->data2;
 
     // 获取非对称加密秘钥
-    RsaCrypto rsa("private.pem", RsaCrypto::KeyType::PrivateKey);
+    string priKeyStr = m_redisConn->getRsaKey("PrivateKey");
+    RsaCrypto rsa;
+    rsa.parseStringToKey(priKeyStr, RsaCrypto::KeyType::PrivateKey);
+
+//    RsaCrypto rsa("private.pem", RsaCrypto::KeyType::PrivateKey);
+    //  使用秘钥对数据进行解密
     string aesKey = rsa.deCrypto(enCryptoedAesKey);
 
     // 校验aes秘钥
@@ -222,12 +227,18 @@ void GameCommunication::handleUserRegister(std::shared_ptr<Message> requestMsg, 
 GameCommunication::GameCommunication() {
     // 加载mysql服务器配置
     Debug("加载mysql服务器配置.....");
-    ParseDBJson parse;
-    shared_ptr<DBInfo> info = parse.getDataBaseInfo(ParseDBJson::DBType::Mysql);
+    // 使用jsoncpp加载配置出现问题，暂不使用
+//    ParseDBJson parse;
+//    shared_ptr<DBInfo> info = parse.getDataBaseInfo(ParseDBJson::DBType::Mysql);
 
     // 连接mysql服务器
     m_mysqlConn = new MySqlConn;
-    bool flag = m_mysqlConn->connect(info->user, info->password, info->dbname, info->ip, info->port);
-//    bool flag = m_mysqlConn->connect("root", "123456", "ddz", "localhost");
+//    bool flag = m_mysqlConn->connect(info->user, info->password, info->dbname, info->ip, info->port);
+    bool flag = m_mysqlConn->connect("root", "123456", "ddz", "localhost");
+    assert(flag);
+
+    // 连接redis服务器
+    m_redisConn = new RedisConn;
+    flag = m_redisConn->initEnvironment();
     assert(flag);
 }

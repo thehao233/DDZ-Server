@@ -7,4 +7,4 @@ aux_source_directory(./ SRC)
 # 将源文件制作为静态库
 add_library(common STATIC ${SRC})
 
-target_link_libraries(common jsoncpp)
+target_link_libraries(common jsoncpp redis++)

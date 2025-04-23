@@ -8,9 +8,10 @@
 #include "sstream"
 #include "RsaCrypto.h"
 #include "Codec.h"
-#include "Log.h"
 #include "GameCommunication.h"
+#include "RedisConn.h"
 #include <iostream>
+#include "Log.h"
 
 int TcpConnection::processRead(void* arg)
 {
@@ -112,19 +113,28 @@ TcpConnection::~TcpConnection()
 }
 
 void TcpConnection::processRsaSecretKey() {
-    // 将非对称加密的公钥和签名后的公钥写入缓冲区
-    ifstream ifs("public.pem");
-    stringstream ss;
-    // 将读缓冲区内的数据读取出来
-    ss << ifs.rdbuf();
-    string data = ss.str();
+//    // 将非对称加密的公钥和签名后的公钥写入缓冲区
+//    ifstream ifs("public.pem");
+//    stringstream ss;
+//    // 将读缓冲区内的数据读取出来
+//    ss << ifs.rdbuf();
+//    string data = ss.str();
 
+    // 从redis服务器中取出公钥数据
+    RedisConn redis;
+    redis.initEnvironment();
+    std::string pubkey = redis.getRsaKey("PublicKey");
+
+    // 取出私钥
+    std::string privateKeyString = redis.getRsaKey("PrivateKey");
     // 将使用私钥对公钥进行数字签名
-    RsaCrypto priKey("private.pem", RsaCrypto::PrivateKey);
-    string signedData = priKey.sign(data);
+    RsaCrypto rsa;
+    rsa.parseStringToKey(privateKeyString, RsaCrypto::KeyType::PrivateKey);
+//    RsaCrypto priKey("private.pem", RsaCrypto::PrivateKey);
+    string signedData = rsa.sign(pubkey);
 
     Message msg;
-    msg.data1 = data;
+    msg.data1 = pubkey;
     msg.data2 = signedData;
     msg.resCode = ResponseCode::RsaFenfa;
 

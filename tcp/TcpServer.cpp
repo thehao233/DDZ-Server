@@ -3,8 +3,12 @@
 #include "TcpConnection.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "Log.h"
+#include <fstream>
+#include <sstream>
+#include <unistd.h>
 #include "RsaCrypto.h"
+#include "RedisConn.h"
+#include "Log.h"
 
 int TcpServer::acceptConnection(void* arg)
 {
@@ -68,9 +72,10 @@ void TcpServer::run()
 {
     Debug("服务器程序已经启动了...");
 
-    // 生成非对称加密的密钥对
-    RsaCrypto rsa;
-    rsa.generatePkey(RsaCrypto::KeyLength::BITS_2k);
+    // 生成非对称加密的密钥对 并将其储存到redis服务器
+    saveRsaKey();
+//    RsaCrypto rsa;
+//    rsa.generatePkey(RsaCrypto::KeyLength::BITS_2k);
 
     // 启动线程池
     m_threadPool->run();
@@ -80,4 +85,42 @@ void TcpServer::run()
     m_mainLoop->addTask(channel, ElemType::ADD);
     // 启动反应堆模型
     m_mainLoop->run();
+}
+
+void TcpServer::saveRsaKey() {
+    // 生成秘密对
+    RsaCrypto rsa;
+    rsa.generatePkey(RsaCrypto::KeyLength::BITS_2k);
+
+    // 将非对称加密的公钥和签名后的公钥写入缓冲区
+    ifstream ifs("public.pem");
+    stringstream ss;
+    // 将读缓冲区内的数据读取出来
+    ss << ifs.rdbuf();
+    string data = ss.str();
+    ifs.close();
+
+    // 将公钥数据存放到redis服务器中
+    RedisConn redis;
+    bool flag = redis.initEnvironment();
+    assert(flag);
+    // 清空之前的数据
+    redis.clear();
+    redis.saveRsaKey("PublicKey", data);
+
+    // 将非对称加密的私钥钥和签名后的公钥写入缓冲区
+    ifs.open("private.pem");
+    // 将读缓冲区内的数据读取出来
+    ss << ifs.rdbuf();
+    data = ss.str();
+    ifs.close();
+
+    // 将私钥数据存放到redis服务器中
+    redis.saveRsaKey("PrivateKey", data);
+
+    // 将存储在磁盘的 Rsa秘钥文件删除
+    unlink("public.pem");
+    unlink("private.pem");
+
+    Debug("成功将秘钥存放到redis服务器.....");
 }
