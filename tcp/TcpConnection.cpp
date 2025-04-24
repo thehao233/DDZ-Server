@@ -123,7 +123,7 @@ void TcpConnection::processRsaSecretKey() {
     // 从redis服务器中取出公钥数据
     RedisConn redis;
     redis.initEnvironment();
-    std::string data = redis.getRsaKey("PublicKey");
+    std::string pubkey = redis.getRsaKey("PublicKey");
 
     // 取出私钥
     std::string privateKeyString = redis.getRsaKey("PrivateKey");
@@ -131,10 +131,10 @@ void TcpConnection::processRsaSecretKey() {
     RsaCrypto rsa;
     rsa.parseStringToKey(privateKeyString, RsaCrypto::KeyType::PrivateKey);
 //    RsaCrypto priKey("private.pem", RsaCrypto::PrivateKey);
-    string signedData = rsa.sign(data);
+    string signedData = rsa.sign(pubkey);
 
     Message msg;
-    msg.data1 = data;
+    msg.data1 = pubkey;
     msg.data2 = signedData;
     msg.resCode = ResponseCode::RsaFenfa;
 

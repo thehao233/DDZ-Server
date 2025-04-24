@@ -56,12 +56,16 @@ enum RequestCode : int {
   UserLogin = 0,
   Register = 1,
   AesFenfa = 2,
+  AutoRoom = 3,
+  CreateRoom = 4,
+  SearchRoom = 5,
+  JoinRoom = 6,
   RequestCode_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
   RequestCode_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
 bool RequestCode_IsValid(int value);
 constexpr RequestCode RequestCode_MIN = UserLogin;
-constexpr RequestCode RequestCode_MAX = AesFenfa;
+constexpr RequestCode RequestCode_MAX = JoinRoom;
 constexpr int RequestCode_ARRAYSIZE = RequestCode_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* RequestCode_descriptor();
@@ -83,7 +87,10 @@ enum ResponseCode : int {
   RegisterOK = 1,
   RsaFenfa = 2,
   AesVerifyOK = 3,
-  Failed = 4,
+  SearchRoomOK = 4,
+  JoinRoomOK = 5,
+  StartGame = 6,
+  Failed = 7,
   ResponseCode_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
   ResponseCode_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
@@ -230,11 +237,12 @@ class Information final :
 
   enum : int {
     kUsernameFieldNumber = 1,
-    kData1FieldNumber = 2,
-    kData2FieldNumber = 3,
-    kData3FieldNumber = 4,
-    kReqCodeFieldNumber = 5,
-    kResCodeFieldNumber = 6,
+    kRoomnameFieldNumber = 2,
+    kData1FieldNumber = 3,
+    kData2FieldNumber = 4,
+    kData3FieldNumber = 5,
+    kReqCodeFieldNumber = 6,
+    kResCodeFieldNumber = 7,
   };
   // bytes username = 1;
   void clear_username();
@@ -250,7 +258,21 @@ class Information final :
   std::string* _internal_mutable_username();
   public:
 
-  // bytes data1 = 2;
+  // bytes roomname = 2;
+  void clear_roomname();
+  const std::string& roomname() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_roomname(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_roomname();
+  PROTOBUF_NODISCARD std::string* release_roomname();
+  void set_allocated_roomname(std::string* roomname);
+  private:
+  const std::string& _internal_roomname() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_roomname(const std::string& value);
+  std::string* _internal_mutable_roomname();
+  public:
+
+  // bytes data1 = 3;
   void clear_data1();
   const std::string& data1() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -264,7 +286,7 @@ class Information final :
   std::string* _internal_mutable_data1();
   public:
 
-  // bytes data2 = 3;
+  // bytes data2 = 4;
   void clear_data2();
   const std::string& data2() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -278,7 +300,7 @@ class Information final :
   std::string* _internal_mutable_data2();
   public:
 
-  // bytes data3 = 4;
+  // bytes data3 = 5;
   void clear_data3();
   const std::string& data3() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -292,7 +314,7 @@ class Information final :
   std::string* _internal_mutable_data3();
   public:
 
-  // .RequestCode reqCode = 5;
+  // .RequestCode reqCode = 6;
   void clear_reqcode();
   ::RequestCode reqcode() const;
   void set_reqcode(::RequestCode value);
@@ -301,7 +323,7 @@ class Information final :
   void _internal_set_reqcode(::RequestCode value);
   public:
 
-  // .ResponseCode resCode = 6;
+  // .ResponseCode resCode = 7;
   void clear_rescode();
   ::ResponseCode rescode() const;
   void set_rescode(::ResponseCode value);
@@ -319,6 +341,7 @@ class Information final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr username_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr roomname_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr data1_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr data2_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr data3_;
@@ -390,7 +413,57 @@ inline void Information::set_allocated_username(std::string* username) {
   // @@protoc_insertion_point(field_set_allocated:Information.username)
 }
 
-// bytes data1 = 2;
+// bytes roomname = 2;
+inline void Information::clear_roomname() {
+  _impl_.roomname_.ClearToEmpty();
+}
+inline const std::string& Information::roomname() const {
+  // @@protoc_insertion_point(field_get:Information.roomname)
+  return _internal_roomname();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void Information::set_roomname(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.roomname_.SetBytes(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:Information.roomname)
+}
+inline std::string* Information::mutable_roomname() {
+  std::string* _s = _internal_mutable_roomname();
+  // @@protoc_insertion_point(field_mutable:Information.roomname)
+  return _s;
+}
+inline const std::string& Information::_internal_roomname() const {
+  return _impl_.roomname_.Get();
+}
+inline void Information::_internal_set_roomname(const std::string& value) {
+  
+  _impl_.roomname_.Set(value, GetArenaForAllocation());
+}
+inline std::string* Information::_internal_mutable_roomname() {
+  
+  return _impl_.roomname_.Mutable(GetArenaForAllocation());
+}
+inline std::string* Information::release_roomname() {
+  // @@protoc_insertion_point(field_release:Information.roomname)
+  return _impl_.roomname_.Release();
+}
+inline void Information::set_allocated_roomname(std::string* roomname) {
+  if (roomname != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.roomname_.SetAllocated(roomname, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.roomname_.IsDefault()) {
+    _impl_.roomname_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:Information.roomname)
+}
+
+// bytes data1 = 3;
 inline void Information::clear_data1() {
   _impl_.data1_.ClearToEmpty();
 }
@@ -440,7 +513,7 @@ inline void Information::set_allocated_data1(std::string* data1) {
   // @@protoc_insertion_point(field_set_allocated:Information.data1)
 }
 
-// bytes data2 = 3;
+// bytes data2 = 4;
 inline void Information::clear_data2() {
   _impl_.data2_.ClearToEmpty();
 }
@@ -490,7 +563,7 @@ inline void Information::set_allocated_data2(std::string* data2) {
   // @@protoc_insertion_point(field_set_allocated:Information.data2)
 }
 
-// bytes data3 = 4;
+// bytes data3 = 5;
 inline void Information::clear_data3() {
   _impl_.data3_.ClearToEmpty();
 }
@@ -540,7 +613,7 @@ inline void Information::set_allocated_data3(std::string* data3) {
   // @@protoc_insertion_point(field_set_allocated:Information.data3)
 }
 
-// .RequestCode reqCode = 5;
+// .RequestCode reqCode = 6;
 inline void Information::clear_reqcode() {
   _impl_.reqcode_ = 0;
 }
@@ -560,7 +633,7 @@ inline void Information::set_reqcode(::RequestCode value) {
   // @@protoc_insertion_point(field_set:Information.reqCode)
 }
 
-// .ResponseCode resCode = 6;
+// .ResponseCode resCode = 7;
 inline void Information::clear_rescode() {
   _impl_.rescode_ = 0;
 }

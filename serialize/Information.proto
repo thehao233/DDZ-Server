@@ -5,6 +5,10 @@ enum RequestCode
     UserLogin = 0;
     Register = 1;
     AesFenfa = 2;
+    AutoRoom = 3;
+    CreateRoom = 4;
+    SearchRoom = 5;
+    JoinRoom = 6;
 };
 
 enum ResponseCode
@@ -13,15 +17,19 @@ enum ResponseCode
     RegisterOK = 1;
     RsaFenfa = 2;
     AesVerifyOK = 3;
-    Failed = 4;
+    SearchRoomOK = 4;
+    JoinRoomOK = 5;
+    StartGame = 6;
+    Failed = 7;
 };
 
 message Information
 {
     bytes username = 1;
-    bytes data1 = 2;
-    bytes data2 = 3;
-    bytes data3 = 4;
-    RequestCode reqCode = 5;
-    ResponseCode resCode = 6;
+    bytes roomname = 2;
+    bytes data1 = 3;
+    bytes data2 = 4;
+    bytes data3 = 5;
+    RequestCode reqCode = 6;
+    ResponseCode resCode = 7;
 };

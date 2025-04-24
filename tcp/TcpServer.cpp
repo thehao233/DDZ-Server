@@ -121,4 +121,6 @@ void TcpServer::saveRsaKey() {
     // 将存储在磁盘的 Rsa秘钥文件删除
     unlink("public.pem");
     unlink("private.pem");
+
+    Debug("成功将秘钥存放到redis服务器.....");
 }
