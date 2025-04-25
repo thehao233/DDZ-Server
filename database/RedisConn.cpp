@@ -49,3 +49,10 @@ RedisConn::~RedisConn() {
         delete m_redis;
     }
 }
+
+RedisConn::RedisConn() {
+
+    // 连接redis服务器
+    bool flag = initEnvironment();
+    assert(flag);
+}

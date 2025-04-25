@@ -26,6 +26,11 @@ public:
     // 设置数据发送和连接断开的回调函数
     void setCallback(sendMsgCallback func1, deleteConnCallback func2);
 
+    // 向redis服务器 存储RSA密钥对
+    void saveRsaKey(std::string field, std::string value);
+    // 向redis服务器 获取RSA秘钥
+    std::string getRsaKey(std::string field);
+
 private:
     // 读取请求数据
     std::shared_ptr<Message> parseRequestData(Buffer* readBuffer);
@@ -36,6 +41,10 @@ private:
     void handleUserRegister(std::shared_ptr<Message> requestMsg, Message& responseMsg);
     // 处理用户登录
     void handleUserLogin(std::shared_ptr<Message> requestMsg, Message& responseMsg);
+    // 处理创建房间
+    void handleCreateRoom(std::shared_ptr<Message> requestMsg, Message& responseMsg);
+    // 处理加入房间
+    void handleJoinRoom(std::shared_ptr<Message> requestMsg, Message& responseMsg);
 
 private:
     sendMsgCallback m_sendMsgCallback;

@@ -10,7 +10,7 @@
 class RedisConn {
 public:
 
-    RedisConn() = default;
+    RedisConn();
     ~RedisConn();
 
     // 初始化环境
@@ -18,6 +18,11 @@ public:
 
     // 清空数据库信息
     void clear();
+
+    // 获取redis服务器操作对象
+    sw::redis::Redis* getRedis() {
+        return m_redis;
+    }
 
     // 存储RSA密钥对
     void saveRsaKey(std::string field, std::string value);

@@ -125,6 +125,11 @@ GameCommunication::~GameCommunication() {
     {
         delete m_aes;
     }
+
+    if (m_redisConn)
+    {
+        delete m_redisConn;
+    }
 }
 
 void GameCommunication::handleUserLogin(std::shared_ptr<Message> requestMsg, Message& responseMsg) {
@@ -239,6 +244,19 @@ GameCommunication::GameCommunication() {
 
     // 连接redis服务器
     m_redisConn = new RedisConn;
-    flag = m_redisConn->initEnvironment();
     assert(flag);
+}
+
+void GameCommunication::handleJoinRoom(std::shared_ptr<Message> requestMsg, Message &responseMsg) {
+
+
+
+}
+
+void GameCommunication::saveRsaKey(std::string field, std::string value) {
+    m_redisConn->saveRsaKey(field, value);
+}
+
+std::string GameCommunication::getRsaKey(std::string field) {
+    return m_redisConn->getRsaKey(field);
 }

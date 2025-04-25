@@ -102,8 +102,8 @@ void TcpServer::saveRsaKey() {
 
     // 将公钥数据存放到redis服务器中
     RedisConn redis;
-    bool flag = redis.initEnvironment();
-    assert(flag);
+//    bool flag = redis.initEnvironment();
+//    assert(flag);
     // 清空之前的数据
     redis.clear();
     redis.saveRsaKey("PublicKey", data);

@@ -121,12 +121,10 @@ void TcpConnection::processRsaSecretKey() {
 //    string data = ss.str();
 
     // 从redis服务器中取出公钥数据
-    RedisConn redis;
-    redis.initEnvironment();
-    std::string pubkey = redis.getRsaKey("PublicKey");
+    std::string pubkey = m_gameComm->getRsaKey("PublicKey");
 
     // 取出私钥
-    std::string privateKeyString = redis.getRsaKey("PrivateKey");
+    std::string privateKeyString = m_gameComm->getRsaKey("PrivateKey");
     // 将使用私钥对公钥进行数字签名
     RsaCrypto rsa;
     rsa.parseStringToKey(privateKeyString, RsaCrypto::KeyType::PrivateKey);
