@@ -11,6 +11,7 @@
 #include <functional>
 #include "MySqlConn.h"
 #include "RedisConn.h"
+#include "RoomList.h"
 
 class GameCommunication {
 public:
@@ -45,6 +46,21 @@ private:
     void handleCreateRoom(std::shared_ptr<Message> requestMsg, Message& responseMsg);
     // 处理加入房间
     void handleJoinRoom(std::shared_ptr<Message> requestMsg, Message& responseMsg);
+
+    // 判断是否可以开始游戏
+    /** 1. 如果不可以：设置向房间内所有用户通知人数信息的函数
+     *  2. 如果可以：设置向房间内所有用户通知游戏开始的函数，并附带生成的牌组信息
+     * */
+    void readyForPlay(std::string roomname, std::string data);
+    // 开始游戏
+    /**
+     * 1.生成卡牌信息
+     * 2.将信息发送给用户们
+     * */
+    void startGame(std::string roomname, UsersSendFuncMap players);
+
+    // 获取三个用户的出牌顺序
+    std::string getPlayersOrder(std::string roomname);
 
 private:
     sendMsgCallback m_sendMsgCallback;

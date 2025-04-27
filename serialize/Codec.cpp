@@ -14,6 +14,7 @@ string Codec::encodeMsg(Message *uncodedMsg)
 {
     // 设置编解码器数据
     m_inf.set_username(uncodedMsg->username);
+    m_inf.set_roomname(uncodedMsg->roomname);
     m_inf.set_data1(uncodedMsg->data1);
     m_inf.set_data2(uncodedMsg->data2);
     m_inf.set_data3(uncodedMsg->data3);
@@ -35,6 +36,7 @@ shared_ptr<Message> Codec::decodeMsg(string codedMsg)
     // 设置编码后的数据
     shared_ptr<Message> uncodeMsg(new Message);
     uncodeMsg->username = m_inf.username();
+    uncodeMsg->roomname = m_inf.roomname();
     uncodeMsg->data1 = m_inf.data1();
     uncodeMsg->data2 = m_inf.data2();
     uncodeMsg->data3 = m_inf.data3();

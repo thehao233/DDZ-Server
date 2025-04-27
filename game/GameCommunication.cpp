@@ -9,7 +9,8 @@
 #include "Log.h"
 #include "RsaCrypto.h"
 #include "ParseDBJson.h"
-
+#include "Room.h"
+#include "Card.h"
 
 std::shared_ptr<Message> GameCommunication::parseRequestData(Buffer* readBuffer) {
 
@@ -43,6 +44,9 @@ void GameCommunication::handleRequest(Buffer* readBuffer) {
     // 响应数据
     Message responseMsg;
 
+    // 设置返回数据的函数
+    sendMsgCallback sendMsg = m_sendMsgCallback;
+
     switch (requestMsg->reqCode)
     {
         case RequestCode::UserLogin:
@@ -57,6 +61,21 @@ void GameCommunication::handleRequest(Buffer* readBuffer) {
             Debug("开始处理Aes分发.........");
             handleAesFenfa(requestMsg, responseMsg);
             break;
+        case RequestCode::AutoRoom:
+            Debug("开始加入随机房间.........");
+            handleJoinRoom(requestMsg, responseMsg);
+            // 向房间中的客户端发送 人数/开始游戏 的信息
+            // 设计 readyForPlay 的目的：
+            // m_sendMsgCallback 同一时间只针对一个客户端发送信息(因为它被TcpConnection封装(发送函数与一个文件描述符))
+            // 因此想要完成对多个客户端的数据发送，需要设计一个与m_sendMsgCallback类型相同的可调用对象
+            // 在上述思想上增加对游戏是否开始的判断，最终函数就是 readyForPlay
+            sendMsg = std::bind(&GameCommunication::readyForPlay, this, responseMsg.roomname, std::placeholders::_1);
+            break;
+        case RequestCode::JoinRoom:
+            Debug("开始加入指定房间.........");
+            handleJoinRoom(requestMsg, responseMsg);
+            sendMsg = std::bind(&GameCommunication::readyForPlay, this, responseMsg.roomname, std::placeholders::_1);
+            break;
         default:
             break;
     }
@@ -65,7 +84,6 @@ void GameCommunication::handleRequest(Buffer* readBuffer) {
     Codec codec;
     string encodedMsg = codec.encodeMsg(&responseMsg);
     // 返回响应数据
-    sendMsgCallback sendMsg = m_sendMsgCallback;
     Debug("回复给客户端的数据: %s, size = %d, status: %d", encodedMsg.data(), encodedMsg.size(), responseMsg.resCode);
     sendMsg(encodedMsg);
 }
@@ -249,8 +267,67 @@ GameCommunication::GameCommunication() {
 
 void GameCommunication::handleJoinRoom(std::shared_ptr<Message> requestMsg, Message &responseMsg) {
 
+    Room room;
 
+    // 获取用户分数
+    int score = 0;
+    // 获取当前用户上一次游戏的房间
+    std::string oldRoomname = room.currentRoom(requestMsg->username);
+    if (oldRoomname != std::string())
+    {
+        // 不是第一次参加游戏，则从redis获取最新分数
+        score = room.getPlayerScore(oldRoomname, requestMsg->username);
+    }
+    else
+    {
+        // 如果是首次加入房间，则从mysql数据库读取分数
+        std::string sql = "select score from `information` where name = '" + requestMsg->username + "';";
+        bool flag = m_mysqlConn->query(sql);
+        assert(flag);
+        // 获取一行查询到的数据
+        m_mysqlConn->next();
+        score = stoi(m_mysqlConn->value(0));
+    }
 
+    // 获取用户移入的房间
+    std::string roomname;
+    bool flag = true;
+    if (requestMsg->reqCode == RequestCode::AutoRoom)
+    {
+        // 随机加入房间
+        roomname = room.joinRoom(requestMsg->username);
+
+    } else if (requestMsg->reqCode == RequestCode::JoinRoom)
+    {
+        // 加入指定房间
+        roomname = requestMsg->roomname;
+        flag = room.joinRoom(requestMsg->username, requestMsg->roomname);
+    }
+
+    if (!flag)
+    {
+        // 房间加入失败则直接退出
+        responseMsg.resCode = ResponseCode::Failed;
+        responseMsg.data1 = "房间已满，加入指定房间失败....";
+        return;
+    }
+
+    // 更新 新房间中用户的分数
+    room.updatePlayerScore(requestMsg->roomname, requestMsg->username, score);
+
+    // 存储 <房间 - 用户 - 通信函数> 信息
+    RoomList* roomList = RoomList::getInstance();
+    Debug("未执行addInfo");
+    roomList->addInfo(roomname, requestMsg->username, m_sendMsgCallback);
+    Debug("已经执行addInfo");
+
+    // 组织回复数据
+    responseMsg.resCode = ResponseCode::JoinRoomOK;
+    responseMsg.roomname = roomname;
+    // 加入房间的人数
+    requestMsg->data1 = std::to_string(room.playerCount(roomname));
+
+    Debug("加入的房间为：%s, 人数为：%s", roomname.c_str(), requestMsg->data1.c_str());
 }
 
 void GameCommunication::saveRsaKey(std::string field, std::string value) {
@@ -259,4 +336,77 @@ void GameCommunication::saveRsaKey(std::string field, std::string value) {
 
 std::string GameCommunication::getRsaKey(std::string field) {
     return m_redisConn->getRsaKey(field);
+}
+
+void GameCommunication::readyForPlay(std::string roomname, std::string data) {
+
+    Debug("readyForPlay.......");
+    RoomList* roomList = RoomList::getInstance();
+    UsersSendFuncMap players = roomList->getUsersSendFuncMap(roomname);
+
+    // 将序列化后的response信息发送给房间内的每个用户
+    for (auto pair: players)
+    {
+        // 通知各个客户端
+        pair.second(data);
+        Debug("当前房间内人数: %d==================", players.size());
+    }
+    // 如果房间人数足够，则继续发送游戏数据
+    if (players.size() == 3)
+    {
+        startGame(roomname, players);
+    }
+
+}
+
+void GameCommunication::startGame(std::string roomname, UsersSendFuncMap players) {
+    // 生成卡牌信息
+    Card card;
+    // 初始化牌组
+    card.initCards();
+    // 获取手牌信息
+    std::string handCards = card.getHandCards();
+    // 获取底牌信息
+    std::string lastCards = card.getLastCards();
+    // 获取用户出牌顺序
+    std::string order = getPlayersOrder(roomname);
+
+    // 组织回复的数据
+    Message msg;
+    msg.resCode = ResponseCode::StartGame;
+    msg.roomname = roomname;
+    msg.data1 = handCards;
+    msg.data2 = lastCards;
+    msg.data3 = order;
+
+    Codec codec;
+    std::string data = codec.encodeMsg(&msg);
+
+    // 将数据发送个客户端们
+    for (auto player : players)
+    {
+        player.second(data);
+    }
+
+}
+
+std::string GameCommunication::getPlayersOrder(std::string roomname) {
+
+    auto redis = m_redisConn->getRedis();
+
+    // 排序后的结果集
+    std::vector<std::pair<std::string, double>> result;
+    // score降序取出每个用户的信息
+    redis->zrevrange(roomname, 0, -1, back_inserter(result));
+
+    // 组织次序数据:   用户名-次序-分数#
+    int order = 1;
+    std::string orderStr;
+    for (const auto userInfo : result)
+    {
+        std::string data = userInfo.first + '-' + to_string(order++) + '-' + to_string((int)userInfo.second) + '#';
+        orderStr += data;
+    }
+
+    return orderStr;
 }

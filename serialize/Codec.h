@@ -10,6 +10,7 @@ using namespace std;
 struct Message
 {
     string username;
+    string roomname;
     string data1;
     string data2;
     string data3;
