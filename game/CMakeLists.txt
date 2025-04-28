@@ -7,4 +7,4 @@ aux_source_directory(./ SRC)
 # 将源文件制作为静态库
 add_library(game STATIC ${SRC})
 
-target_link_libraries(game common)
+target_link_libraries(game common hiredis)

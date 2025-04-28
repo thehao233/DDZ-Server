@@ -13,7 +13,7 @@ RoomList *RoomList::getInstance() {
 void RoomList::addInfo(std::string roomname, std::string username, SendMsgCallback func) {
 
     // 对共享资源加锁
-    std::unique_lock<std::mutex> locker(m_mutex);
+    std::lock_guard<std::mutex> locker(m_mutex);
 
     Debug("addInfo.......");
     auto it = m_roomMap.find(roomname);
@@ -39,6 +39,10 @@ void RoomList::addInfo(std::string roomname, std::string username, SendMsgCallba
 }
 
 UsersSendFuncMap RoomList::getUsersSendFuncMap(std::string roomname) {
+
+    // 对共享资源加锁
+    // 暂时不能加，会出现死锁，原因待定
+//    std::lock_guard<std::mutex> locker(m_mutex);
 
     Debug("查询的roomname:%s", roomname.c_str());
     auto it = m_roomMap.find(roomname);

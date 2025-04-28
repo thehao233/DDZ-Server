@@ -56,18 +56,22 @@ bool Room::joinRoom(std::string username, std::string roomname) {
     }
 
     // 加入房间
+    Debug("joinRoom 房间名:%s", roomname.c_str());
     if (!redis->exists(roomname))
     {
         // 不存在该房间 则 创建并加入
         redis->sadd(OnePlayerRooms, roomname);
+        Debug("移入1用户房间......");
     }
     else if (redis->sismember(OnePlayerRooms, roomname))
     {
         redis->smove(OnePlayerRooms, TwoPlayerRooms, roomname);
+        Debug("移入2用户房间......");
     }
     else if (redis->sismember(TwoPlayerRooms, roomname))
     {
         redis->smove(TwoPlayerRooms, ThreePlayerRooms, roomname);
+        Debug("移入3用户房间......");
     }
     else
     {

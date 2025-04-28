@@ -159,7 +159,8 @@ void GameCommunication::handleUserLogin(std::shared_ptr<Message> requestMsg, Mes
     // 设置查询语句
     char sql[1024];
     sprintf(sql,
-            "select * from `user` where name = '%s' and passwd = '%s' and (select count(*) from `information` where name = '%s' and status = 0);",
+//            "select * from `user` where name = '%s' and passwd = '%s' and (select count(*) from `information` where name = '%s' and status = 0);",
+            "select * from `user` where name = '%s' and passwd = '%s';",
             username.c_str(), pwd.c_str(), username.c_str());
 
     std::cout << "handleUserLogin 的 sql为：" << sql << std::endl;
@@ -317,17 +318,15 @@ void GameCommunication::handleJoinRoom(std::shared_ptr<Message> requestMsg, Mess
 
     // 存储 <房间 - 用户 - 通信函数> 信息
     RoomList* roomList = RoomList::getInstance();
-    Debug("未执行addInfo");
     roomList->addInfo(roomname, requestMsg->username, m_sendMsgCallback);
-    Debug("已经执行addInfo");
 
     // 组织回复数据
     responseMsg.resCode = ResponseCode::JoinRoomOK;
     responseMsg.roomname = roomname;
     // 加入房间的人数
-    requestMsg->data1 = std::to_string(room.playerCount(roomname));
+    responseMsg.data1 = std::to_string(room.playerCount(roomname));
 
-    Debug("加入的房间为：%s, 人数为：%s", roomname.c_str(), requestMsg->data1.c_str());
+    Debug("加入的房间为：%s, 人数为：%s", roomname.c_str(), responseMsg.data1.c_str());
 }
 
 void GameCommunication::saveRsaKey(std::string field, std::string value) {
@@ -354,6 +353,7 @@ void GameCommunication::readyForPlay(std::string roomname, std::string data) {
     // 如果房间人数足够，则继续发送游戏数据
     if (players.size() == 3)
     {
+        Debug("startGame.......");
         startGame(roomname, players);
     }
 
@@ -370,6 +370,8 @@ void GameCommunication::startGame(std::string roomname, UsersSendFuncMap players
     std::string lastCards = card.getLastCards();
     // 获取用户出牌顺序
     std::string order = getPlayersOrder(roomname);
+
+    Debug("cards:%s, lastCards:%s, order:%s", handCards.c_str(), lastCards.c_str(), order.c_str());
 
     // 组织回复的数据
     Message msg;
